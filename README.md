@@ -1,24 +1,56 @@
-Refer to https://kineticstoolkit.uqam.ca/doc/extensions.html to know how to use this template repository to build your own extension, then delete this line.
-
-
-
-# kineticstoolkit_EXTENSIONNAME
+# kineticstoolkit_anthropometrics
 
 Please write a one-line description of your extension.
 
 
-## Installing
+## Installing/Upgrading
 
 ```
-pip install git+https://github.com/USERNAME/kineticstoolkit_EXTENSIONNAME
+pip install --upgrade git+https://github.com/felixchenier/kineticstoolkit_anthropometrics
 ```
 
 ## Uninstalling
 
 ```
-pip uninstall kineticstoolkit_EXTENSIONNAME
+pip uninstall kineticstoolkit_anthropometrics
 ```
 
 ## How to use this extension
 
-Please write code examples and tutorials to teach others how to use your extension.
+TODO
+
+### Skin markers (either real or reconstructed):
+
+- HeadVertex
+- Sellion
+- C7
+- Suprasternale
+- PubicSymphysis
+- AnteriorSuperiorIliacSpineR/L
+- PosteriorSuperiorIliacSpineR/L
+- AcromionR/L
+- LateralHumeralEpicondyleR/L
+- MedialHumeralEpicondyleR/L
+- UlnarStyloidR/L
+- RadialStyloidR/L
+- CarpalMetaHead2R/L
+- CarpalMetaHead5R/L
+- HipJointCenterR/L
+- LateralFemoralEpicondyleR/L
+- MedialFemoralEpicondyleR/L
+- LateralMalleolusR/L
+- MedialMalleolusR/L
+- CalcaneusR/L
+- NavicularR/L
+- TarsalMetaHead1R/L
+- TarsalMetaHead5R/L
+
+Inferred joint centers:
+
+- L5S1JointCenter
+- C7T1JointCenter
+- GlenohumeralJointCenterR/L
+- ElbowJointCenterR/L
+- WristJointCenterR/L
+- KneeJointCenterR/L
+- AnkleJointCenterR/L
