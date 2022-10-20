@@ -35,6 +35,7 @@ from kineticstoolkit import TimeSeries, geometry, kinematics
 from typing import Union, Sequence
 import numpy as np
 import pandas as pd
+import os
 
 
 def infer_joint_centers(
@@ -220,7 +221,20 @@ def _infer_pelvis_joint_centers(
 def _infer_thorax_joint_centers(
     markers: TimeSeries, sex: str = "M"
 ) -> TimeSeries:
-    """Infer C7T1 and glenohumeral joint centers based on anthropom. data."""
+    """
+    Infer C7T1 and glenohumeral joint centers based on anthropom. data.
+
+    C7T1 is inferred using Dumas, R., Wojtusch, J., 2018. Estimation of the
+    Body Segment Inertial Parameters for the Rigid Body Biomechanical Models
+    Used in Motion Analysis, in: Handbook of Human Motion. Springer
+    International Publishing, Cham, pp. 47–77.
+    https://doi.org/10.1007/978-3-319-14418-4_147
+
+    GH joint centres are inferred using Rab, G., Petuskey, K., Bagley, A.,
+    2002. A method for determination of upper extremity kinematics.
+    Gait & Posture 15, 113–119. https://doi.org/10.1016/S0966-6362(01)00155-2
+
+    """
     # Get the required markers
     try:
         c7 = markers.data["C7"]
@@ -237,24 +251,22 @@ def _infer_thorax_joint_centers(
     if sex == "M":
         c7t1_angle = 8  # deg
         c7t1_ratio = 0.55
-        gh_angle = -67  # deg
-        gh_ratio = 0.42
-    # elif sex == 'F':
-    #     c7t1_angle = 14  # deg
-    #     c7t1_ratio = 0.53
-    #     gh_angle = -5  # deg
-    #     gh_ratio = 0.53
+    elif sex == "F":
+        c7t1_angle = 14  # deg
+        c7t1_ratio = 0.53
     else:
-        raise ValueError("sex must be 'M' for now.")
+        raise ValueError("sex must be 'M' or 'F'")
 
-    # Create reference frames with x: X7-SUP, y: L5S1-C7, z: right
+    # Create reference frames with x: C7-SUP, y: L5S1-C7, z: right
     c7sup = sup - c7
     c7_lcs = geometry.create_frames(origin=c7, x=(c7sup), xy=(c7 - l5s1))
     rac_lcs = geometry.create_frames(origin=rac, x=(c7sup), xy=(c7 - l5s1))
     lac_lcs = geometry.create_frames(origin=lac, x=(c7sup), xy=(c7 - l5s1))
 
     # Thorax width (tw)
-    tw = np.sqrt(np.sum(np.nanmean(c7sup, axis=0) ** 2))
+    tw = np.mean(np.sqrt(np.sum((sup - c7) ** 2, axis=1)))
+    # Interacromial distance (aw)
+    ad = np.mean(np.sqrt(np.sum((rac - lac) ** 2, axis=1)))
 
     # Local positions
     local_c7t1 = np.array(
@@ -268,22 +280,11 @@ def _infer_thorax_joint_centers(
         ]
     )
 
-    local_rgh = np.array(
+    local_gh = np.array(
         [
             [
-                gh_ratio * tw * np.cos(np.deg2rad(gh_angle)),
-                gh_ratio * tw * np.sin(np.deg2rad(gh_angle)),
-                0.0,
-                1.0,
-            ]
-        ]
-    )
-
-    local_lgh = np.array(
-        [
-            [
-                gh_ratio * tw * np.cos(np.deg2rad(gh_angle)),
-                gh_ratio * tw * np.sin(np.deg2rad(gh_angle)),
+                0,
+                -0.17 * ad,
                 0.0,
                 1.0,
             ]
@@ -296,10 +297,10 @@ def _infer_thorax_joint_centers(
         local_c7t1, c7_lcs
     )
     output.data["GlenohumeralJointCenterR"] = geometry.get_global_coordinates(
-        local_rgh, rac_lcs
+        local_gh, rac_lcs
     )
     output.data["GlenohumeralJointCenterL"] = geometry.get_global_coordinates(
-        local_lgh, lac_lcs
+        local_gh, lac_lcs
     )
 
     return output
@@ -993,7 +994,7 @@ LINKS = {
 INERTIAL_VALUES = {}
 
 # Dumas2007
-_ = pd.read_csv("anthropometrics_dumas_2007.csv")
+_ = pd.read_csv(os.path.dirname(__file__) + "/anthropometrics_dumas_2007.csv")
 _[["RelIXY", "RelIXZ", "RelIYZ"]] = _[["RelIXY", "RelIXZ", "RelIYZ"]].applymap(
     lambda s: complex(s)
 )
